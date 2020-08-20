@@ -1,0 +1,15 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  sale: one
+  unit_price: 
+  total: 
+  amount: 1
+  game: one
+
+two:
+  sale: two
+  unit_price: 
+  total: 
+  amount: 1
+  game: two

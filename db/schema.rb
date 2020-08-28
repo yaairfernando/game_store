@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2020_08_20_013442) do
+ActiveRecord::Schema.define(version: 2020_08_22_021042) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -89,4 +89,29 @@ ActiveRecord::Schema.define(version: 2020_08_20_013442) do
   add_foreign_key "sales", "clients", column: "buyer_id"
   add_foreign_key "sales", "sale_types"
   add_foreign_key "sales", "users", column: "seller_id"
+
+  create_view "sales_reports", materialized: true, sql_definition: <<-SQL
+      SELECT s.id,
+      s.created_at,
+      s.updated_at,
+      s.total,
+      s.status,
+      st.name AS sale_type,
+      st.category,
+      sd.currency,
+      sd.country
+     FROM ((sales s
+       JOIN sale_details sd ON ((sd.sale_id = s.id)))
+       JOIN sale_types st ON ((st.id = s.sale_type_id)));
+  SQL
+  add_index "sales_reports", ["category"], name: "index_sales_reports_on_category"
+  add_index "sales_reports", ["country"], name: "index_sales_reports_on_country"
+  add_index "sales_reports", ["created_at"], name: "index_sales_reports_on_created_at"
+  add_index "sales_reports", ["currency"], name: "index_sales_reports_on_currency"
+  add_index "sales_reports", ["id"], name: "index_sales_reports_on_id"
+  add_index "sales_reports", ["sale_type"], name: "index_sales_reports_on_sale_type"
+  add_index "sales_reports", ["status"], name: "index_sales_reports_on_status"
+  add_index "sales_reports", ["total"], name: "index_sales_reports_on_total"
+  add_index "sales_reports", ["updated_at"], name: "index_sales_reports_on_updated_at"
+
 end

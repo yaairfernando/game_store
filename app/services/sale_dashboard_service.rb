@@ -1,23 +1,26 @@
 class SaleDashboardService
+  SALE_STATUSES = Sale.statuses
+  SALE_TYPE_CATEGORIES = SaleType.categories
 
-  def self.call
-    3.times do 
-      Sale.all.each do |sale|
-        sale_dup = sale.dup
-        sale_dup.sale_detail = sale.sale_detail.dup
-        sale_dup.save
-      end
-    end
-    # sales_by_category = {}
-    # SalesReport.all.group_by(&:sale_type).each do |key, value|
-    #   sales_by_category[key] = value.size
-    # end
-    # {
-    #   completed_national_sales: SalesReport.where(currency: 'MXN', country: 'US', category: 1, status: 0).size,
-    #   penging_sales: SalesReport.where(sale_type: 'Commics', status: 2).size,
-    #   rejected_sales: SalesReport.where(sale_type: 'Action', status: 3).where('total > ?', 500).size,
-    #   sales_by_category: sales_by_category
-    # }
+  def initialize(params)
+    @params = params
+    @replace_status_key = ->(key) { key = SALE_STATUSES.find { |_, v| v.eql? key }[0] }
+    @replace_category_key = ->(key) { key = SALE_TYPE_CATEGORIES.find {|_, v| v.eql? key }[0] }
+  end
+  
+  def call
+    # JOINS
+    # @sales = Sale::Common.new(@params, Sale).operations_common_where
+    # @sales_by_currency = @sales.includes(:sale_detail).group_by {|e| e.sale_detail.currency }
+    # @sales_by_status = @sales.group_by(&:status)
+    # @sales_by_category = @sales.includes(:sale_type).group_by {|e| e.sale_type.category }
+    
+    # MATERIALIZED VIEWS
+    @sales = Sale::Common.new(@params, SalesReport).operations_common_where
+    @sales_by_currency = @sales.group_by(&:currency)
+    @sales_by_status = @sales.group_by(&:status).transform_keys(&@replace_status_key)
+    @sales_by_category = @sales.group_by(&:category).transform_keys(&@replace_category_key)
+    build_hashes
   end
 
   def self.refresh
@@ -28,10 +31,13 @@ class SaleDashboardService
 
   def build_hashes
     {
-      completed_national_sales: SalesReport.where(currency: 'MXN', country: 'US', category: 1, status: 0),
-      penging_sales: SalesReport.where(sale_type: 'Commics', status: 2),
-      rejected_sales: SalesReport.where(sale_type: 'Action', status: 3).where('total > ?', 500),
-      sales_by_category: SalesReport.all.group_by { |e| e.sale_type }
+      sales_by_currency: get_hash_values_size(@sales_by_currency),
+      sales_by_status: get_hash_values_size(@sales_by_status),
+      sales_by_category: get_hash_values_size(@sales_by_category)
     }
+  end
+
+  def get_hash_values_size(hash)
+    hash.map { |key, value| [key, value.size] }.to_h
   end
 end

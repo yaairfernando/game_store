@@ -111,7 +111,6 @@ ActiveRecord::Schema.define(version: 2020_08_22_021042) do
   add_index "sales_reports", ["id"], name: "index_sales_reports_on_id"
   add_index "sales_reports", ["sale_type"], name: "index_sales_reports_on_sale_type"
   add_index "sales_reports", ["status"], name: "index_sales_reports_on_status"
-  add_index "sales_reports", ["total"], name: "index_sales_reports_on_total"
   add_index "sales_reports", ["updated_at"], name: "index_sales_reports_on_updated_at"
 
 end

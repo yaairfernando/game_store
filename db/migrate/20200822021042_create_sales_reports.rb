@@ -5,7 +5,6 @@ class CreateSalesReports < ActiveRecord::Migration[6.0]
     add_index :sales_reports, :id
     add_index :sales_reports, :created_at
     add_index :sales_reports, :updated_at
-    add_index :sales_reports, :total
     add_index :sales_reports, :status
     add_index :sales_reports, :sale_type
     add_index :sales_reports, :category

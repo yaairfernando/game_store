@@ -16,6 +16,7 @@ class SaleDashboardService
     # @sales_by_category = @sales.includes(:sale_type).group_by {|e| e.sale_type.category }
     
     # MATERIALIZED VIEWS
+    SalesReportWorker.perform_async
     @sales = Sale::Common.new(@params, SalesReport).operations_common_where
     @sales_by_currency = @sales.group_by(&:currency)
     @sales_by_status = @sales.group_by(&:status).transform_keys(&@replace_status_key)
